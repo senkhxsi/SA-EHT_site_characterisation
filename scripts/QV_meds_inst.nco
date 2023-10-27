@@ -1,0 +1,9 @@
+*n_lev = lev.size();       # Calculate the number of levels
+QV_med[$lev] = 0.0;        # Initialize the QV_med variable to zeros
+
+# Loop over levels (i) to calculate the median for the first time step (time index 0) for each level
+for (*i = 0; i < n_lev; ++i) {
+    *sorted = QV(0,i,0,0);   # Extract the 'QV' values for the first time step (time index 0) and current level
+    *med = sorted.size() / 2;  # Calculate the index of the median for the current level
+    QV_med(i) = sorted(*med);  # Calculate and store the median for the current level
+}
