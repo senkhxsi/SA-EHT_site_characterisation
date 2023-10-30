@@ -2,22 +2,21 @@
 # spectra.
 
 # Site name, date range, and path to directory containing the  data files.
-export SITE=ALMA
-export SITE_LABEL='ALMA'
-export SITE_ALT=5070
+export SITE=BMAC
+export SITE_LABEL='BMAC'
+export SITE_ALT=3000
 export DATERANGE=2009-2022
-# export DATADIR=../${DATERANGE}
-# random subset of data files to speed up demo/testing
-export DATADIR=../${DATERANGE}_${SITE}_subset
+export SITE_DIR=~/ngeht_site_characterisation/${SITE}
+export DATADIR=${SITE_DIR}/${SITE}_${DATERANGE}_subset
 
 # Site coordinates, and bracketing MERRA-2 grid coordinates
-export SITE_LAT=-23.029
-export SITE_LONG=-67.755
+export SITE_LAT=-30.648081
+export SITE_LONG=27.935199
 
-export MERRA_LAT0=-23.5
-export MERRA_LAT1=-23.0
-export MERRA_LONG0=-68.125
-export MERRA_LONG1=-67.5
+export MERRA_LAT0=-31
+export MERRA_LAT1=-30.5
+export MERRA_LONG0=27.5
+export MERRA_LONG1=28.125
 
 # The surface pressure at the MERRA-2 grid points may not match the nominal
 # site surface pressure.  The following constants control truncation
@@ -43,26 +42,28 @@ export F_MAX=700.
 export DF=500.
 
 # Compute profile statistics.
-export OUTDIR_PROFILES=../profile_stats
+export OUTDIR_PROFILES=${SITE_DIR}/run_3/profile_stats
 if [ ! -d $OUTDIR_PROFILES ]; then
     mkdir $OUTDIR_PROFILES
 fi
 echo computing seasonal statistics ...
-./profile_stats.sh
+~/ngeht_site_characterisation/scripts/./profile_stats.sh
 
 # Generate am model files and compute spectra.
-export OUTDIR_AM=../am_models
+export OUTDIR_AM=${SITE_DIR}/run_3/am_models
 if [ ! -d $OUTDIR_AM ]; then
     mkdir $OUTDIR_AM
 fi
 echo generating am model files ...
-./make_am_models.sh
+~/ngeht_site_characterisation/scripts/./make_am_models.sh
 echo computing am models ...
-./run_am_models.sh
+~/ngeht_site_characterisation/scripts/./run_am_models.sh
 
 # Some housekeeping
 rm -r $OUTDIR_AM/am_cache
-python3 cleanup.py ..
+rm -r *.col
+mv ../psurf_values.txt .
+python3 ~/ngeht_site_characterisation/scripts/cleanup.py ${SITE_DIR}/run_3
 
 
 echo done.
