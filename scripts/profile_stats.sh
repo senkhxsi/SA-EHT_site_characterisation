@@ -16,7 +16,7 @@ fi
 PSURF_FILE=${SITE_DIR}/psurf_values.txt
 
 
-for YEAR in {2009..2019}; do
+for YEAR in {2009..2022}; do
 for SEASON in Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec; do
 
 echo $SITE $SEASON $YEAR
@@ -200,6 +200,8 @@ PS=$(bc <<< "scale=10; $W2 * ($W4 * ${P_alt[0]} + $W3 * ${P_alt[2]}) + $W1 * ($W
 # Compute averages
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/T_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/QV_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
+ncap2 -O -S ~/ngeht_site_characterisation/scripts/QL_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
+ncap2 -O -S ~/ngeht_site_characterisation/scripts/QI_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/O3_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
 
 # Extract pressure levels into a single-column file
@@ -216,20 +218,26 @@ awk 'BEGIN {FS="="} /lev/ {printf("%8.1f\n", $2)}' > lev.col
 ncks --trd -H -v T_med ${SITE}_${SEASON}_${YEAR}.nc |
 awk 'BEGIN {FS="="} /T_/ {printf("%8.3f\n", $3 < 1000. ? $3 : 999.999)}' > T_med.col
 ncks --trd -H -v QV_med ${SITE}_${SEASON}_${YEAR}.nc |
-awk 'BEGIN {FS="="} /QV_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > h2o_vmr_med.col
+awk 'BEGIN {FS="="} /QV_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > h2o_vpr_vmr_med.col
+ncks --trd -H -v QL_med ${SITE}_${SEASON}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /QL_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > lqd_h20_vmr_med.col
+ncks --trd -H -v QI_med ${SITE}_${SEASON}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /QI_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > ice_h2o_vmr_med.col
 ncks --trd -H -v O3_med ${SITE}_${SEASON}_${YEAR}.nc |
 awk 'BEGIN {FS="="} /O3_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 47.997) * $3 : 9.9999e99)}' > o3_vmr_med.col
 
 rm -f ${SITE}_${SEASON}_${YEAR}.nc
 
 # Paste all the columns together into a single file under a header line.
-echo "#  P[mb]  T_med[K] H2O_med[ppm] O3_med[ppm]" \
+echo "#  P[mb]  T_med[K] H2O_vpr_med[ppm] lqd_H2O_med[ppm] ice_H2O_med[ppm] O3_med[ppm]" \
     > ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians.txt
 
 
 paste -d "\0" lev.col \
     T_med.col \
-    h2o_vmr_med.col \
+    h2o_vpr_vmr_med.col \
+    lqd_h20_vmr_med.col \
+    ice_h2o_vmr_med.col \
     o3_vmr_med.col \
     >> ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians.txt
 
@@ -263,5 +271,5 @@ done
 
 #rm -r lev.col \
 #    T_med.col \
-#    h2o_vmr_med.col \
+#    h2o_vpr_vmr_med.col \
 #    o3_vmr_med.col \.   

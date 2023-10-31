@@ -3,7 +3,7 @@
 # Load the environment variables from psurf_values.txt
 source ${SITE_DIR}/psurf_values.txt
 
-for YEAR in {2009..2019}; do
+for YEAR in {2009..2022}; do
 for SEASON in Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec; do
 
 export YEAR

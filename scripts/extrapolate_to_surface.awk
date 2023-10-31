@@ -34,6 +34,12 @@ END {
         du = tab[1,j] - tab[2,j]
         tab[0,j] = tab[1,j] + (log_Ps - log_P1) * du / dlog_P
     }
+    # Set negative values in the extrapolated row to zero
+    for (j = 2; j <= NF; ++j) {
+        if (tab[0,j] < 0) {
+            tab[0,j] = 0
+        }
+    }
     for (i = 0; i <= n; ++i) {
         if (tab[i,1] > Ps)
             continue

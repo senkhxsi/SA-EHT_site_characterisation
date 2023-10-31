@@ -214,6 +214,8 @@ rm [5-7].nc
 # Extract instantaneous values (0 UT)
 ncap2 -O -S T_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated.nc
 ncap2 -O -S QV_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated.nc
+ncap2 -O -S QL_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated.nc
+ncap2 -O -S QI_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated.nc
 ncap2 -O -S O3_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated.nc
 
 # Extract pressure levels into a single-column file
@@ -230,20 +232,26 @@ awk 'BEGIN {FS="="} /lev/ {printf("%8.1f\n", $2)}' > lev.col
 ncks --trd -H -v T_inst 15_APRIL_2022_interpolated.nc |
 awk 'BEGIN {FS="="} /T_/ {printf("%8.3f\n", $3 < 1000. ? $3 : 999.999)}' > T_inst.col
 ncks --trd -H -v QV_inst 15_APRIL_2022_interpolated.nc |
-awk 'BEGIN {FS="="} /QV_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > h2o_vmr_inst.col
+awk 'BEGIN {FS="="} /QV_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > h2o_vpr_vmr_inst.col
+ncks --trd -H -v QL_inst 15_APRIL_2022_interpolated.nc |
+awk 'BEGIN {FS="="} /QL_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > lqd_h20_vmr_inst.col
+ncks --trd -H -v QI_inst 15_APRIL_2022_interpolated.nc |
+awk 'BEGIN {FS="="} /QI_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > ice_h2o_vmr_inst.col
 ncks --trd -H -v O3_inst 15_APRIL_2022_interpolated.nc |
 awk 'BEGIN {FS="="} /O3_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 47.997) * $3 : 9.9999e99)}' > o3_vmr_inst.col
 
 #rm -f 15_APRIL_2022_interpolated.nc
 
 # Paste all the columns together into a single file under a header line.
-echo "#  P[mb]  T_inst[K] H2O_inst[ppm] O3_inst[ppm]" \
+echo "#  P[mb]  T_inst[K] H2O_vpr_inst[ppm] lqd_H2O_inst[ppm] ice_H2O_inst[ppm] O3_inst[ppm]" \
     > ${OUTDIR_PROFILES}/15_APRIL_2022_MERRA_inst.txt
 
 
 paste -d "\0" lev.col \
     T_inst.col \
-    h2o_vmr_inst.col \
+    h2o_vpr_vmr_inst.col \
+    lqd_h20_vmr_inst.col \
+    ice_h2o_vmr_inst.col \
     o3_vmr_inst.col \
     >> ${OUTDIR_PROFILES}/15_APRIL_2022_MERRA_inst.txt
 
@@ -277,5 +285,5 @@ awk -f extrapolate_to_surface.awk Ptrunc=$PTRUNC Ps=$PS ${OUTDIR_PROFILES}/15_AP
 
 rm -r lev.col \
     T_inst.col \
-    h2o_vmr_inst.col \
+    h2o_vpr_vmr_inst.col \
     o3_vmr_inst.col \
