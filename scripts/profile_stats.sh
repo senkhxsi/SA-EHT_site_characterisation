@@ -203,6 +203,8 @@ ncap2 -O -S ~/ngeht_site_characterisation/scripts/QV_meds.nco ${SITE}_${SEASON}_
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/QL_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/QI_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/O3_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
+ncap2 -O -S ~/ngeht_site_characterisation/scripts/U_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
+ncap2 -O -S ~/ngeht_site_characterisation/scripts/V_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
 
 # Extract pressure levels into a single-column file
 
@@ -211,6 +213,10 @@ ncap2 -O -S ~/ngeht_site_characterisation/scripts/O3_meds.nco ${SITE}_${SEASON}_
 # format is CDL.
 ncks --trd -H -v lev ${SITE}_${SEASON}_${YEAR}.nc |
 awk 'BEGIN {FS="="} /lev/ {printf("%8.1f\n", $2)}' > lev.col
+ncks --trd -H -v U_med ${SITE}_${SEASON}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /U_/ {printf("%8.3f\n", $3)}' > u_med.col
+ncks --trd -H -v V_med ${SITE}_${SEASON}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /V_/ {printf("%8.3f\n", $3)}' > v_med.col
 
 # Extract corresponding profiles vs. pressure into single-column files,
 # converting mass mixing ratios to volume mixing ratios in parts per million.
@@ -229,7 +235,7 @@ awk 'BEGIN {FS="="} /O3_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 47.997
 rm -f ${SITE}_${SEASON}_${YEAR}.nc
 
 # Paste all the columns together into a single file under a header line.
-echo "#  P[mb]  T_med[K] H2O_vpr_med[ppm] lqd_H2O_med[ppm] ice_H2O_med[ppm] O3_med[ppm]" \
+echo "#  P[mb]  T_med[K] H2O_vpr_med[ppm] lqd_H2O_med[ppm] ice_H2O_med[ppm] O3_med[ppm] U_med[m/s] V_med[m/s]" \
     > ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians.txt
 
 
@@ -239,6 +245,8 @@ paste -d "\0" lev.col \
     lqd_h20_vmr_med.col \
     ice_h2o_vmr_med.col \
     o3_vmr_med.col \
+    u_med.col \
+    v_med.col \
     >> ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians.txt
 
 # Estimate surface-level pressures from atmospheric mean sea level pressures using simplified hypsometric equation
