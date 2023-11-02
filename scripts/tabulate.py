@@ -1,9 +1,21 @@
+"""Tabulates results of MERRA-am simulations and some quantities of interest from MERRA-2 files
+
+Returns:
+    csv files: For each month, a csv file containing PWVs and zenith spectral opacities. Additionally, a single csv file containing daily windspeed
+    averages for every day in the date range of interest. 
+"""
+
 import os
 import sys
 import re
 import csv
-import numpy as np
 from glob import glob
+import numpy as np
+import pandas as pd
+import xarray as xr
+
+# Get directory in which data is stored
+data_dir = f"{sys.argv[2]}"
 
 # cd to directory containing MERRA-am simulations outputs as organised by "cleanup.py" 
 os.chdir(f"{sys.argv[1]}")
@@ -33,7 +45,7 @@ def magnitude(u, v):
 # Read quantities of interest from each month's directory and use data to populate a csv file for each month 
 for month in months:
     data = [
-        ["Year", "PWV(mm)", "tau_86GHz", "tau_230GHz", "tau_345GHz", "Windspeed(m/s)"]
+        ["Year", "PWV(mm)", "tau_86GHz", "tau_230GHz", "tau_345GHz"]
     ]
     
     
@@ -95,33 +107,12 @@ for month in months:
                     opacities[n].append(float(fields[1]))
                     break
     
-    os.chdir("../profile_stats")
-    
-    
-    # Get windspeed components
-    med_files = glob("*_ex.txt")
-    med_files.sort()
-    windspeeds = []
-    for med_file in med_files:
-        with open(med_file, 'r') as file:
-            # Read the lines from the file
-            lines = file.readlines()
-
-            # Extract quantities from the second row
-            second_row = lines[1].split()
-            u = float(second_row[-2])
-            v = float(second_row[-1])
-            
-            # Append windspeed magnitude to list
-            windspeeds.append(magnitude(u, v))
-    
     
     # Join all lists        
     for m, year in enumerate(years):
-        row = [year, pwvs[m], opacities[0][m], opacities[1][m], opacities[2][m], windspeeds[m]]
+        row = [year, pwvs[m], opacities[0][m], opacities[1][m], opacities[2][m]]
         data.append(row)
         
-    
     # Write data to csv file
     os.chdir(f"{sys.argv[1]}/weather_data")
     file_name = f"{month}.csv"
@@ -132,3 +123,49 @@ for month in months:
         csvwriter.writerows(data)
 
     print(f'CSV file "{file_name}" has been created and populated successfully.')
+    os.chdir(f"{sys.argv[1]}")
+    
+    
+# Now create separate csv files to store daily windspeed averages
+   
+# Use glob to get a list of NetCDF files in the directory
+merra2_files = glob(os.path.join(data_dir, "*.nc"))
+
+# Initialize empty lists to store results
+dates = []
+windspeed_avgs = []
+
+# Loop through each file
+for file in merra2_files:
+
+    # Extract date information from the file name (assuming the format "YYYYMMDD.SUB.nc")
+    file_name = os.path.basename(file)
+    # Assuming the format "MERRA2_400.inst3_3d_asm_Np.20220415.SUB.nc", get the date part
+    date = file_name.split('.')[2]
+    year = int(date[:4])
+    month = int(date[4:6])
+    day = int(date[6:8])
+
+    # Open the NetCDF file using xarray
+    ds = xr.open_dataset(file)
+
+    # Calculate the averages of "U" and "V" variables
+    u_avg = ds['U'].mean().values.item()
+    v_avg = ds['V'].mean().values.item()
+    windspeed = magnitude(u_avg, v_avg)
+
+    # Append the results to the lists
+    dates.append(f"{year} {month} {day}")
+    windspeed_avgs.append(windspeed)
+
+    # Close the dataset to free up resources
+    ds.close()
+
+# Create a DataFrame to store the results
+df = pd.DataFrame({'Date': dates, 'Windspeed[m/s]': windspeed_avgs})
+
+# Save the DataFrame to a CSV file
+csv_file_path = os.path.join({sys.argv[1]},"weather_data/windspeed.csv")
+df.to_csv(csv_file_path, index=False)
+
+print(f"Windspeeds have been saved to {csv_file_path}.")

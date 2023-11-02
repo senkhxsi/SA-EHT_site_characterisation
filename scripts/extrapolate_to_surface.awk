@@ -36,7 +36,7 @@ END {
     }
     # Set negative values in the extrapolated row to zero, excluding last two columns
     for (j = 2; j <= NF; ++j) {
-        if (tab[0,j] < 0 && j < NF-1) {
+        if (tab[0,j] < 0) {
             tab[0,j] = 0
         }
     }
