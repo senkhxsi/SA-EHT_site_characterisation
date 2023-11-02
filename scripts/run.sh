@@ -28,12 +28,12 @@ export MERRA_LONG1=28.125
 export PTRUNC=900. # truncation point [mbar] of MERRA-2 profiles
 
 # Plot ranges for profiles.  T in K, mixing ratios in ppm
-export T_MIN=190
-export T_MAX=310
-export XH2O_MIN=1
-export XH2O_MAX=30000
-export XO3_MIN=0.01
-export XO3_MAX=20
+#export T_MIN=190
+#export T_MAX=310
+#export XH2O_MIN=1
+#export XH2O_MAX=30000
+#export XO3_MIN=0.01
+#export XO3_MAX=20
 
 # Frequency range [GHz] for am models
 export F_MIN=80.
@@ -63,7 +63,8 @@ echo computing am models ...
 rm -r $OUTDIR_AM/am_cache
 rm -r *.col
 mv ../psurf_values.txt .
+echo cleaning up...
 python3 ~/ngeht_site_characterisation/scripts/cleanup.py ${SITE_DIR}/run_3
-
+python3 ~/ngeht_site_characterisation/scripts/tabulate.py ${SITE_DIR}/run_3
 
 echo done.
