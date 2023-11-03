@@ -12,7 +12,7 @@ if [ -f "${SITE_DIR}/psurf_values.txt" ]; then
 else
     echo "File does not exist."
 fi
-
+echo "Creating "psurf_values.txt"" 
 PSURF_FILE=${SITE_DIR}/psurf_values.txt
 
 
@@ -24,40 +24,40 @@ echo $SITE $SEASON $YEAR
 # Find data files by season, and concatenate
 case $SEASON in
 Jan)
-    find $DATADIR  \( -name *Np.${YEAR}01* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}01* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Feb)
-    find $DATADIR  \( -name *Np.${YEAR}02* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}02* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Mar)
-    find $DATADIR  \( -name *Np.${YEAR}03* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}03* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Apr)
-    find $DATADIR  \( -name *Np.${YEAR}04* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}04* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 May)
-    find $DATADIR  \( -name *Np.${YEAR}05* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}03* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Jun)
-    find $DATADIR  \( -name *Np.${YEAR}06* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}06* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Jul)
-    find $DATADIR  \( -name *Np.${YEAR}07* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}07* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Aug)
-    find $DATADIR  \( -name *Np.${YEAR}08* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}08* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Sep)
-    find $DATADIR  \( -name *Np.${YEAR}09* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}09* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Oct)
-    find $DATADIR  \( -name *Np.${YEAR}10* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}10* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Nov)
-    find $DATADIR  \( -name *Np.${YEAR}11* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}11* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Dec)
-    find $DATADIR  \( -name *Np.${YEAR}12* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}12* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 esac
 
