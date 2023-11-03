@@ -72,7 +72,7 @@ END {
         if (P[i] <= P_Voigt)
             print "lineshape Voigt-Kielkopf"
         print "column dry_air vmr"
-        printf("column h2o vmr %.2e\n", x_H2O_vpr[i] * 1e-6)
+        printf("column h2o RH %.2f%%\n", x_H2O_vpr[i] * 100)
         if (T[i] > 242 && x_lqd_H2O[i] > 0)
             printf("column lwp_abs_Rayleigh vmr %.2e\n", x_lqd_H2O[i] * 1e-6)
         if (T[i] < 273 && x_ice_H2O[i] > 0)

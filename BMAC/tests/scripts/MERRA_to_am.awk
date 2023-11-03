@@ -3,7 +3,7 @@
 BEGIN {
     P_col = 1       # column number for pressure [mbar]
     T_col = 2       # column number for temperature [K]
-    x_H2O_vpr_col = 3   # column number for H2O vmr in ppmv
+    x_H2O_vpr_col = 3   # column number for RH 
     x_lqd_H2O_col = 4   # column number for liquid water vmr in ppm
     x_ice_H2O_col = 5   # column number for ice water vmr in ppm
     x_O3_col = 6    # column number for O3 vmr in ppmv    # column number for O3 vmr in ppmv
@@ -72,7 +72,7 @@ END {
         if (P[i] <= P_Voigt)
             print "lineshape Voigt-Kielkopf"
         print "column dry_air vmr"
-        printf("column h2o vmr %.2e\n", x_H2O_vpr[i] * 1e-6)
+        printf("column h2o RH %.2f%%\n", x_H2O_vpr[i] * 100)
         if (T[i] > 242)
             printf("column lwp_abs_Rayleigh vmr %.2e\n", x_lqd_H2O[i] * 1e-6)
         if (T[i] < 273)
