@@ -202,7 +202,7 @@ ncflint -O -w ${W1},${W2} 3.nc 4.nc 7.nc
 ncap2 -O -s "lon={${SITE_LONG}}" 7.nc 6.nc
 ncflint -O -w ${W3},${W4} 5.nc 6.nc 7.nc
 ncap2 -O -s "lat={${SITE_LAT}}" 7.nc 15_APRIL_2022_interpolated.nc
-rm [5-7].nc 
+rm [1-7].nc 
 
 #PS=$(ncdump -v PS 15_APRIL_2022_interpolated.nc | awk '/PS =/ {p=1; next} p && /;/ {p=0} p {gsub(/,/, ""); print $1/100; exit}')
 #SLP=$(ncdump -v SLP 15_APRIL_2022_interpolated.nc | awk '/SLP =/ {p=1; next} p && /;/ {p=0} p {gsub(/,/, ""); print $1/100; exit}')
@@ -213,7 +213,7 @@ rm [5-7].nc
 
 # Extract instantaneous values (0 UT)
 ncap2 -O -S T_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated.nc
-ncap2 -O -S QV_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated.nc
+ncap2 -O -S RH_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated.nc
 ncap2 -O -S QL_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated.nc
 ncap2 -O -S QI_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated.nc
 ncap2 -O -S O3_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated.nc
@@ -225,14 +225,14 @@ ncap2 -O -S O3_inst.nco 15_APRIL_2022_interpolated.nc 15_APRIL_2022_interpolated
 # format is CDL.
 ncks --trd -H -v lev 15_APRIL_2022_interpolated.nc |
 awk 'BEGIN {FS="="} /lev/ {printf("%8.1f\n", $2)}' > lev.col
+ncks --trd -H -v RH_inst 15_APRIL_2022_interpolated.nc |
+awk 'BEGIN {FS="="} /RH_/ {printf("%8.1f\n", $3)}' > h2o_vpr_inst.col
 
 # Extract corresponding profiles vs. pressure into single-column files,
 # converting mass mixing ratios to volume mixing ratios in parts per million.
 
 ncks --trd -H -v T_inst 15_APRIL_2022_interpolated.nc |
 awk 'BEGIN {FS="="} /T_/ {printf("%8.3f\n", $3 < 1000. ? $3 : 999.999)}' > T_inst.col
-ncks --trd -H -v QV_inst 15_APRIL_2022_interpolated.nc |
-awk 'BEGIN {FS="="} /QV_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > h2o_vpr_vmr_inst.col
 ncks --trd -H -v QL_inst 15_APRIL_2022_interpolated.nc |
 awk 'BEGIN {FS="="} /QL_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > lqd_h20_vmr_inst.col
 ncks --trd -H -v QI_inst 15_APRIL_2022_interpolated.nc |
@@ -243,13 +243,13 @@ awk 'BEGIN {FS="="} /O3_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 47.997
 #rm -f 15_APRIL_2022_interpolated.nc
 
 # Paste all the columns together into a single file under a header line.
-echo "#  P[mb]  T_inst[K] H2O_vpr_inst[ppm] lqd_H2O_inst[ppm] ice_H2O_inst[ppm] O3_inst[ppm]" \
+echo "#  P[mb]  T_inst[K] H2O_vpr_inst[1] lqd_H2O_inst[ppm] ice_H2O_inst[ppm] O3_inst[ppm]" \
     > ${OUTDIR_PROFILES}/15_APRIL_2022_MERRA_inst.txt
 
 
 paste -d "\0" lev.col \
     T_inst.col \
-    h2o_vpr_vmr_inst.col \
+    h2o_vpr_inst.col \
     lqd_h20_vmr_inst.col \
     ice_h2o_vmr_inst.col \
     o3_vmr_inst.col \
@@ -285,5 +285,7 @@ awk -f extrapolate_to_surface.awk Ptrunc=$PTRUNC Ps=$PS ${OUTDIR_PROFILES}/15_AP
 
 rm -r lev.col \
     T_inst.col \
-    h2o_vpr_vmr_inst.col \
+    h2o_vpr_inst.col \
+    lqd_h20_vmr_inst.col \
+    ice_h2o_vmr_inst.col \
     o3_vmr_inst.col \

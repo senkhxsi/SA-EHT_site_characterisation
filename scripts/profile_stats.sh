@@ -24,40 +24,40 @@ echo $SITE $SEASON $YEAR
 # Find data files by season, and concatenate
 case $SEASON in
 Jan)
-    find $DATADIR  \( -name *Np.${YEAR}01* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}01* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Feb)
-    find $DATADIR  \( -name *Np.${YEAR}02* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}02* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Mar)
-    find $DATADIR  \( -name *Np.${YEAR}03* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}03* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Apr)
-    find $DATADIR  \( -name *Np.${YEAR}04* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}04* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 May)
-    find $DATADIR  \( -name *Np.${YEAR}05* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}03* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Jun)
-    find $DATADIR  \( -name *Np.${YEAR}06* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}06* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Jul)
-    find $DATADIR  \( -name *Np.${YEAR}07* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}07* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Aug)
-    find $DATADIR  \( -name *Np.${YEAR}08* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}08* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Sep)
-    find $DATADIR  \( -name *Np.${YEAR}09* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}09* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Oct)
-    find $DATADIR  \( -name *Np.${YEAR}10* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}10* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Nov)
-    find $DATADIR  \( -name *Np.${YEAR}11* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}11* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Dec)
-    find $DATADIR  \( -name *Np.${YEAR}12* \) -print  | sort -t '.' -k 5 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}12* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 esac
 
@@ -68,25 +68,69 @@ ncks -O -d lon,1 -d lat,0 0.nc 2.nc
 ncks -O -d lon,0 -d lat,1 0.nc 3.nc
 ncks -O -d lon,1 -d lat,1 0.nc 4.nc
 
+# Interpolate to the site position (ncflint segfaults with -i option, so
+# give explicit weights with -w.) Start by computing the weighting factors.
+W1=$(awk -v x=$SITE_LONG -v x0=$MERRA_LONG0 -v x1=$MERRA_LONG1 'BEGIN {print (x1 - x) / (x1 - x0)}')
+W2=$(awk -v w1=$W1 'BEGIN {print 1.0 - w1}')
+W3=$(awk -v y=$SITE_LAT -v y0=$MERRA_LAT0 -v y1=$MERRA_LAT1 'BEGIN {print (y1 - y) / (y1 - y0)}')
+W4=$(awk -v w3=$W3 'BEGIN {print 1.0 - w3}')
 
+# Do the interpolation, then use ncap2 to set the lon and lat
+# fields in the NetCDF file to the interpolated coordinates.
+ncflint -O -w ${W1},${W2} 1.nc 2.nc 7.nc
+ncap2 -O -s "lon={${SITE_LONG}}" 7.nc 5.nc
+ncflint -O -w ${W1},${W2} 3.nc 4.nc 7.nc
+ncap2 -O -s "lon={${SITE_LONG}}" 7.nc 6.nc
+ncflint -O -w ${W3},${W4} 5.nc 6.nc 7.nc
+ncap2 -O -s "lat={${SITE_LAT}}" 7.nc ${SITE}_${SEASON}_${YEAR}.nc
+
+ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 1.nc 8.nc
+ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 2.nc 9.nc
+ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 3.nc 10.nc
+ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 4.nc 11.nc 
+
+# Estimate surface pressures
 # Arrays to store results
 H_above=()
 H_below=()
 P_above=()
 P_below=()
-
+#placeholder="_"
 # Loop through each file
-for file in {1..4}.nc; do
+for file in {8..11}.nc; do
     #echo "Processing $file..."
-    
-    # Extract lines containing 'H ='
-    H_values=($(ncdump -v H $file | awk '/H =/{p=1; next} p && /\}/{p=0} p' | sed -e 's/,//'))
+
+    # Extract lines containing 'H_med ='
+    #H_values=($(ncdump -v H_med $file | awk '/H_med =/{p=1; next} p && /\}/{p=0} p' | sed -e 's/,//'))
+    # Use ncks to get the values of H_med, then use AWK to process the output and write to a temporary file
+    ncks --trd -H -v H_med "$file" | awk 'BEGIN {FS="="} /H_/ {print ($3 < 100000. ? $3 : 0)}' > temp_file.txt
+
+    # Read the values from the temporary file into the array
+    H_values=()
+    while IFS= read -r value; do
+        H_values+=("$value")
+    done < temp_file.txt
+
+    # Remove the temporary file
+    rm temp_file.txt
+
     #echo ${H_values[@]}
+
     # Extract the values of the 'lev' variable using ncdump, and remove extra characters
-    P_values=$(ncdump -v lev $file | awk '/lev =/{if(++count==2) print;}')
+    #P_values=$(ncdump -v lev $file | awk '/lev =/{if(++count==2) print;}')
 
     # Cut the first two fields (lev and =) and then convert the comma-separated values to an array
-    IFS=', ' read -r -a P_values <<< "$(echo $P_values | cut -d' ' -f3-)"
+    #IFS=', ' read -r -a P_values <<< "$(echo $P_values | cut -d' ' -f3-)"
+    ncks --trd -H -v lev ${SITE}_${SEASON}_${YEAR}.nc | awk 'BEGIN {FS="="} /lev/ {printf("%8.1f\n", $2)}' > temp_file.txt
+
+    # Read the values from the temporary file into the array
+    P_values=()
+    while IFS= read -r value; do
+        P_values+=("$value")
+    done < temp_file.txt
+
+    # Remove the temporary file
+    rm temp_file.txt
 
     h_above=""
     h_below=""
@@ -94,7 +138,7 @@ for file in {1..4}.nc; do
     skips=0
     for H_value in "${H_values[@]}"; do
         # Skip values with "_"
-        if [ "$H_value" = "_" ]; then
+        if [ "$(echo "$H_value == 0" | bc -l)" -eq 1 ]; then
             skips=$((skips + 1))
             continue
         fi
@@ -114,9 +158,9 @@ for file in {1..4}.nc; do
 
     H_above+=("$h_above")
     P_above+=("${P_values[$stop_index]}")
-    if [ "$h_below" = "" ]; then
+    if [ "$(echo "$h_below == 0" | bc -l)" -eq 1 ]; then
         H_below+=(0)
-        SLP=$(ncks -s '%f\n' -H -C -v SLP 15_APRIL_2022_interpolated.nc | head -n 1)
+        SLP=$(ncks -s '%f\n' -H -C -v SLP ${SITE}_${SEASON}_${YEAR}.nc | head -n 1)
         P_below+=($(echo "scale=2; $SLP / 100" | bc))
         echo "Warning: No edge heights found below site altitude. Sea-level pressures will be used for interpolation in the vertical dimension. The results will be less reliable."
     else
@@ -129,11 +173,12 @@ for file in {1..4}.nc; do
     #echo "interations: $iterations"
     #echo "index: $stop_index"
 done
-
 #echo "H_above: ${H_above[@]}"
 #echo "H_below: ${H_below[@]}"
 #echo "P_above: ${P_above[@]}"
 #echo "P_below: ${P_below[@]}"
+
+rm [0-11].nc
 
 # Interpolate in vertical dimension
 # Function for linear interpolation
@@ -174,32 +219,15 @@ done
 
 #echo "P_alt array: ${P_alt[@]}"
 
-
-# Interpolate to the site position (ncflint segfaults with -i option, so
-# give explicit weights with -w.) Start by computing the weighting factors.
-W1=$(awk -v x=$SITE_LONG -v x0=$MERRA_LONG0 -v x1=$MERRA_LONG1 'BEGIN {print (x1 - x) / (x1 - x0)}')
-W2=$(awk -v w1=$W1 'BEGIN {print 1.0 - w1}')
-W3=$(awk -v y=$SITE_LAT -v y0=$MERRA_LAT0 -v y1=$MERRA_LAT1 'BEGIN {print (y1 - y) / (y1 - y0)}')
-W4=$(awk -v w3=$W3 'BEGIN {print 1.0 - w3}')
-
-# Do the interpolation, then use ncap2 to set the lon and lat
-# fields in the NetCDF file to the interpolated coordinates.
-ncflint -O -w ${W1},${W2} 1.nc 2.nc 7.nc
-ncap2 -O -s "lon={${SITE_LONG}}" 7.nc 5.nc
-ncflint -O -w ${W1},${W2} 3.nc 4.nc 7.nc
-ncap2 -O -s "lon={${SITE_LONG}}" 7.nc 6.nc
-ncflint -O -w ${W3},${W4} 5.nc 6.nc 7.nc
-ncap2 -O -s "lat={${SITE_LAT}}" 7.nc ${SITE}_${SEASON}_${YEAR}.nc
-rm [0-7].nc 
 PS=$(bc <<< "scale=10; $W2 * ($W4 * ${P_alt[0]} + $W3 * ${P_alt[2]}) + $W1 * ($W4 * ${P_alt[1]} + $W3 * ${P_alt[3]})")
 
 # Calculate the average SLP value and store it in the SLP shell variable
 #SLP=$(ncdump -v SLP "${SITE}_${SEASON}_${YEAR}.nc" | awk '/SLP =/ {p=1; next} p && /;/ {p=0} p {gsub(/,/, ""); sum+=$1; count++} END {print sum/count/100}')
 #PS=$(ncdump -v PS "${SITE}_${SEASON}_${YEAR}.nc" | awk '/PS =/ {p=1; next} p && /;/ {p=0} p {gsub(/,/, ""); sum+=$1; count++} END {print sum/count/100}')
 
-# Compute averages
+# Compute medians
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/T_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
-ncap2 -O -S ~/ngeht_site_characterisation/scripts/QV_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
+ncap2 -O -S ~/ngeht_site_characterisation/scripts/RH_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/QL_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/QI_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/O3_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
@@ -217,8 +245,8 @@ awk 'BEGIN {FS="="} /lev/ {printf("%8.1f\n", $2)}' > lev.col
 
 ncks --trd -H -v T_med ${SITE}_${SEASON}_${YEAR}.nc |
 awk 'BEGIN {FS="="} /T_/ {printf("%8.3f\n", $3 < 1000. ? $3 : 999.999)}' > T_med.col
-ncks --trd -H -v QV_med ${SITE}_${SEASON}_${YEAR}.nc |
-awk 'BEGIN {FS="="} /QV_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > h2o_vpr_vmr_med.col
+ncks --trd -H -v RH_med ${SITE}_${SEASON}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /RH_/ {printf("%8.1f\n", $3)}' > h2o_vpr_med.col
 ncks --trd -H -v QL_med ${SITE}_${SEASON}_${YEAR}.nc |
 awk 'BEGIN {FS="="} /QL_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > lqd_h20_vmr_med.col
 ncks --trd -H -v QI_med ${SITE}_${SEASON}_${YEAR}.nc |
@@ -229,13 +257,13 @@ awk 'BEGIN {FS="="} /O3_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 47.997
 rm -f ${SITE}_${SEASON}_${YEAR}.nc
 
 # Paste all the columns together into a single file under a header line.
-echo "#  P[mb]  T_med[K] H2O_vpr_med[ppm] lqd_H2O_med[ppm] ice_H2O_med[ppm] O3_med[ppm]" \
+echo "#  P[mb]  T_med[K] H2O_vpr_med[1] lqd_H2O_med[ppm] ice_H2O_med[ppm] O3_med[ppm]" \
     > ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians.txt
 
 
 paste -d "\0" lev.col \
     T_med.col \
-    h2o_vpr_vmr_med.col \
+    h2o_vpr_med.col \
     lqd_h20_vmr_med.col \
     ice_h2o_vmr_med.col \
     o3_vmr_med.col \
@@ -268,8 +296,3 @@ awk -f ~/ngeht_site_characterisation/scripts/extrapolate_to_surface.awk Ptrunc=$
 
 done
 done
-
-#rm -r lev.col \
-#    T_med.col \
-#    h2o_vpr_vmr_med.col \
-#    o3_vmr_med.col \.   
