@@ -84,19 +84,22 @@ ncap2 -O -s "lon={${SITE_LONG}}" 7.nc 6.nc
 ncflint -O -w ${W3},${W4} 5.nc 6.nc 7.nc
 ncap2 -O -s "lat={${SITE_LAT}}" 7.nc ${SITE}_${SEASON}_${YEAR}.nc
 
+# Get edge height medians for surface pressure estimation
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 1.nc 8.nc
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 2.nc 9.nc
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 3.nc 10.nc
 ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 4.nc 11.nc 
 
+rm [0-7].nc
+
 # Estimate surface pressures
 # Arrays to store results
-H_above=()
-H_below=()
-P_above=()
-P_below=()
-#placeholder="_"
-# Loop through each file
+declare -a H_above=()
+declare -a H_below=()
+declare -a P_above=()
+declare -a P_below=()
+
+# Loop through each gridpoint's file
 for file in {8..11}.nc; do
     #echo "Processing $file..."
 
@@ -106,7 +109,7 @@ for file in {8..11}.nc; do
     ncks --trd -H -v H_med "$file" | awk 'BEGIN {FS="="} /H_/ {print ($3 < 100000. ? $3 : 0)}' > temp_file.txt
 
     # Read the values from the temporary file into the array
-    H_values=()
+    declare -a H_values=()
     while IFS= read -r value; do
         H_values+=("$value")
     done < temp_file.txt
@@ -124,7 +127,7 @@ for file in {8..11}.nc; do
     ncks --trd -H -v lev ${SITE}_${SEASON}_${YEAR}.nc | awk 'BEGIN {FS="="} /lev/ {printf("%8.1f\n", $2)}' > temp_file.txt
 
     # Read the values from the temporary file into the array
-    P_values=()
+    declare -a P_values=()
     while IFS= read -r value; do
         P_values+=("$value")
     done < temp_file.txt
@@ -137,7 +140,7 @@ for file in {8..11}.nc; do
     iterations=0
     skips=0
     for H_value in "${H_values[@]}"; do
-        # Skip values with "_"
+        # Skip zero values
         if [ "$(echo "$H_value == 0" | bc -l)" -eq 1 ]; then
             skips=$((skips + 1))
             continue
@@ -178,7 +181,7 @@ done
 #echo "P_above: ${P_above[@]}"
 #echo "P_below: ${P_below[@]}"
 
-rm [0-11].nc
+rm {8,9,10,11}.nc
 
 # Interpolate in vertical dimension
 # Function for linear interpolation
@@ -197,7 +200,7 @@ function linear_interpolate() {
 }
 
 # Initialize P_alt array
-declare -a P_alt
+declare -a P_alt=()
 
 # Loop for each i
 for ((i=0; i<4; i++)); do
