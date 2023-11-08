@@ -132,7 +132,7 @@ for month in months:
 # Now create separate csv files to store daily windspeed averages
    
 # Use glob to get a list of NetCDF files in the directory
-print('Tabulating windspeeds...')
+print('tabulating windspeeds ...')
 merra2_files = glob(os.path.join(data_dir, '*.nc'))
 merra2_files.sort(key=merra2_file_sorting)
 

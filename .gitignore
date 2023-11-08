@@ -2,3 +2,5 @@
 ALMA/
 SMA/
 resources/
+scripts/transfer.sh
+scripts/results_comparison.ipynb

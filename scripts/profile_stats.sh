@@ -85,10 +85,10 @@ ncflint -O -w ${W3},${W4} 5.nc 6.nc 7.nc
 ncap2 -O -s "lat={${SITE_LAT}}" 7.nc ${SITE}_${SEASON}_${YEAR}.nc
 
 # Get edge height medians for surface pressure estimation
-ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 1.nc 8.nc
-ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 2.nc 9.nc
-ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 3.nc 10.nc
-ncap2 -O -S ~/ngeht_site_characterisation/scripts/H_meds.nco 4.nc 11.nc 
+ncap2 -O -S $SCRIPTS_DIR/H_meds.nco 1.nc 8.nc
+ncap2 -O -S $SCRIPTS_DIR/H_meds.nco 2.nc 9.nc
+ncap2 -O -S $SCRIPTS_DIR/H_meds.nco 3.nc 10.nc
+ncap2 -O -S $SCRIPTS_DIR/H_meds.nco 4.nc 11.nc 
 
 rm [0-7].nc
 
@@ -229,11 +229,11 @@ PS=$(bc <<< "scale=10; $W2 * ($W4 * ${P_alt[0]} + $W3 * ${P_alt[2]}) + $W1 * ($W
 #PS=$(ncdump -v PS "${SITE}_${SEASON}_${YEAR}.nc" | awk '/PS =/ {p=1; next} p && /;/ {p=0} p {gsub(/,/, ""); sum+=$1; count++} END {print sum/count/100}')
 
 # Compute medians
-ncap2 -O -S ~/ngeht_site_characterisation/scripts/T_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
-ncap2 -O -S ~/ngeht_site_characterisation/scripts/RH_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
-ncap2 -O -S ~/ngeht_site_characterisation/scripts/QL_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
-ncap2 -O -S ~/ngeht_site_characterisation/scripts/QI_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
-ncap2 -O -S ~/ngeht_site_characterisation/scripts/O3_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
+ncap2 -O -S $SCRIPTS_DIR/T_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
+ncap2 -O -S $SCRIPTS_DIR/RH_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
+ncap2 -O -S $SCRIPTS_DIR/QL_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
+ncap2 -O -S $SCRIPTS_DIR/QI_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
+ncap2 -O -S $SCRIPTS_DIR/O3_meds.nco ${SITE}_${SEASON}_${YEAR}.nc ${SITE}_${SEASON}_${YEAR}.nc
 
 # Extract pressure levels into a single-column file
 
@@ -294,9 +294,9 @@ rm *.col
 echo "PSURF_${SEASON}_${YEAR}=$PS" >> "$PSURF_FILE"
 
 # Remove rows with illogical temperature values
-~/ngeht_site_characterisation/scripts/./filter_rows.sh ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians.txt
+$SCRIPTS_DIR/./filter_rows.sh ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians.txt
 
-awk -f ~/ngeht_site_characterisation/scripts/extrapolate_to_surface.awk Ptrunc=$PTRUNC Ps=$PS ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians.txt > ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians_ex.txt
+awk -f $SCRIPTS_DIR/extrapolate_to_surface.awk Ptrunc=$PTRUNC Ps=$PS ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians.txt > ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians_ex.txt
 
 done
 done

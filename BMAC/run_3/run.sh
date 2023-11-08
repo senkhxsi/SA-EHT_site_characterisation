@@ -8,6 +8,8 @@ export SITE_ALT=3000
 export DATERANGE=2009-2022
 export SITE_DIR=~/ngeht_site_characterisation/${SITE}
 export DATADIR=${SITE_DIR}/${SITE}_${DATERANGE}_subset
+export SCRIPTS_DIR=~/ngeht_site_characterisation/scripts
+export VENV=~/venvs/viper_env
 
 # Site coordinates, and bracketing MERRA-2 grid coordinates
 export SITE_LAT=-30.648081
@@ -39,7 +41,7 @@ if [ ! -d $OUTDIR_PROFILES ]; then
     mkdir $OUTDIR_PROFILES
 fi
 echo computing seasonal statistics ...
-~/ngeht_site_characterisation/scripts/./profile_stats.sh
+$SCRIPTS_DIR/./profile_stats.sh
 
 # Generate am model files and compute spectra.
 export OUTDIR_AM=${SITE_DIR}/run_3/am_models
@@ -47,16 +49,16 @@ if [ ! -d $OUTDIR_AM ]; then
     mkdir $OUTDIR_AM
 fi
 echo generating am model files ...
-~/ngeht_site_characterisation/scripts/./make_am_models.sh
+$SCRIPTS_DIR/./make_am_models.sh
 echo computing am models ...
-~/ngeht_site_characterisation/scripts/./run_am_models.sh
+$SCRIPTS_DIR/./run_am_models.sh
 
 # Some housekeeping
 rm -r $OUTDIR_AM/am_cache
-echo cleaning up...
-python3 ~/ngeht_site_characterisation/scripts/cleanup.py ${SITE_DIR}/run_3
-source ~/venvs/viper_env/bin/activate
-python3 ~/ngeht_site_characterisation/scripts/tabulate.py ${SITE_DIR}/run_3 ${DATADIR}
+echo cleaning up ...
+python3 $SCRIPTS_DIR/cleanup.py ${SITE_DIR}/run_3
+source $VENV/bin/activate
+python3 $SCRIPTS_DIR/tabulate.py ${SITE_DIR}/run_3 ${DATADIR}
 deactivate
 
 echo done.

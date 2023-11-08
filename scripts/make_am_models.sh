@@ -12,10 +12,10 @@ export SEASON
 varname="PSURF_${SEASON}_${YEAR}"
 Ps=$(eval echo \$$varname)
 
-~/ngeht_site_characterisation/scripts/./am_file_header.sh > \
+$SCRIPTS_DIR/./am_file_header.sh > \
     ${OUTDIR_AM}/${SITE}_${SEASON}_${YEAR}.amc
 
-awk -f ~/ngeht_site_characterisation/scripts/MERRA_to_am.awk T_col=2 x_H2O_col=3  x_O3_col=4 P_ground=$Ps ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians_ex.txt >> ${OUTDIR_AM}/${SITE}_${SEASON}_${YEAR}.amc
+awk -f $SCRIPTS_DIR/MERRA_to_am.awk T_col=2 x_H2O_col=3  x_O3_col=4 P_ground=$Ps ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians_ex.txt >> ${OUTDIR_AM}/${SITE}_${SEASON}_${YEAR}.amc
 
 done
 done
