@@ -36,7 +36,7 @@ Apr)
     find $DATADIR  \( -name *Np.${YEAR}04* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 May)
-    find $DATADIR  \( -name *Np.${YEAR}03* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
+    find $DATADIR  \( -name *Np.${YEAR}05* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
     ;;
 Jun)
     find $DATADIR  \( -name *Np.${YEAR}06* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
@@ -272,6 +272,7 @@ paste -d "\0" lev.col \
     o3_vmr_med.col \
     >> ${OUTDIR_PROFILES}/${SITE}_${SEASON}_${YEAR}_MERRA_medians.txt
 
+rm *.col
 # Estimate surface-level pressures from atmospheric mean sea level pressures using simplified hypsometric equation
 
 # Constants
