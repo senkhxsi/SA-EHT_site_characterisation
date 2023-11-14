@@ -80,10 +80,55 @@ ncks -O -d lon,333 -d lat,119 "0UT_BMAC_MERRA2_400.inst3_3d_asm_Np.20220415.nc" 
 
 
 # Arrays to store results
-H_above=()
-H_below=()
-P_above=()
-P_below=()
+#H_above=()
+#H_below=()
+#P_above=()
+#P_below=()
+
+# Function to estimate pressure using simple logarithmic extrapolation
+# Arguments:
+#   $1 - height array (space-separated)
+#   $2 - pressure array (space-separated)
+#   $3 - target height for extrapolation
+extrapolate_to_get_P_alt() {
+    # Check if the number of elements in both arrays is the same
+    if [ $# -lt 3 ] || [ $(wc -w <<< "$1") -ne $(wc -w <<< "$2") ]; then
+        echo "Error: Heights and pressures must have the same number of elements."
+        return 1
+    fi
+
+    # Arrays from arguments
+    heights=($1)
+    pressures=($2)
+    
+    # Target height for extrapolation
+    target_height=$3
+
+    # Check if there are at least two data points
+    if [ ${#heights[@]} -lt 2 ]; then
+        echo "Error: At least two data points are required for extrapolation."
+        return 1
+    fi
+
+    # Calculate logarithmic constants k and b using the last two data points
+    n=${#heights[@]}
+    h1=${heights[$((n-2))]}
+    h2=${heights[$((n-1))]}
+    p1=${pressures[$((n-2))]}
+    p2=${pressures[$((n-1))]}
+
+    k=$(awk "BEGIN {print (log($p2) - log($p1)) / ($h2 - $h1)}")
+    b=$(awk "BEGIN {print log($p1) - $k * $h1}")
+
+    # Use the constants to estimate pressure at the target height
+    estimated_pressure=$(awk "BEGIN {print exp($k * $target_height + $b)}")
+    
+    #echo "Estimated pressure at $target_height meters: $estimated_pressure"
+    printf "%s " "$estimated_pressure"
+}
+
+
+declare -a P_alt
 
 # Loop through each file
 for file in {1..4}.nc; do
@@ -91,55 +136,108 @@ for file in {1..4}.nc; do
     
     # Extract lines containing 'H ='
     H_values=($(ncdump -v H $file | awk '/H =/{p=1; next} p && /\}/{p=0} p' | sed -e 's/,//'))
-    #echo ${H_values[@]}
+    #echo "Initial H_values length: ${#H_values[@]}"
     # Extract the values of the 'lev' variable using ncdump, and remove extra characters
-    P_values=$(ncdump -v lev $file | awk '/lev =/{if(++count==2) print;}')
+    #P_values=$(ncdump -v lev $file | awk '/lev =/{if(++count==2) print;}')
 
     # Cut the first two fields (lev and =) and then convert the comma-separated values to an array
-    IFS=', ' read -r -a P_values <<< "$(echo $P_values | cut -d' ' -f3-)"
+    #IFS=', ' read -r -a P_values <<< "$(echo $P_values | cut -d' ' -f3-)"
 
-    h_above=""
-    h_below=""
-    iterations=0
-    skips=0
-    for H_value in "${H_values[@]}"; do
-        # Skip values with "_"
-        if [ "$H_value" = "_" ]; then
-            skips=$((skips + 1))
-            continue
+    # Use ncks to get the values of H_med, then use AWK to process the output and write to a temporary file
+    #ncks --trd -H -v H "$file" | awk 'BEGIN {FS="="} /H / {print ($3 < 100000. ? $3 : 0)}' > temp_file.txt
+    #ncks -H -v H "$file" | awk -F, '/H / {gsub(/=/,""); print ($2 < 100000. ? $2 : 0)}' > temp_file.txt
+
+    # Read the values from the temporary file into the array
+    #declare -a H_values=()
+    #while IFS= read -r value; do
+    #    H_values+=("$value")
+    #done < temp_file.txt
+
+    # Remove the temporary file
+    #rm temp_file.txt
+
+    #echo ${H_values[@]}
+
+    # Extract the values of the 'lev' variable using ncdump, and remove extra characters
+    #P_values=$(ncdump -v lev $file | awk '/lev =/{if(++count==2) print;}')
+
+    # Cut the first two fields (lev and =) and then convert the comma-separated values to an array
+    #IFS=', ' read -r -a P_values <<< "$(echo $P_values | cut -d' ' -f3-)"
+    ncks --trd -H -v lev "$file" | awk 'BEGIN {FS="="} /lev/ {printf("%8.1f\n", $2)}' > temp_file.txt
+
+    # Read the values from the temporary file into the array
+    declare -a P_values=()
+    while IFS= read -r value; do
+        P_values+=("$value")
+    done < temp_file.txt
+
+    #echo "P_values initial length: ${#P_values[@]}"
+    # Remove the temporary file
+    rm temp_file.txt
+
+    empty_vals=0
+    # Loop through the array
+    for ((i=0; i<${#H_values[@]}; i++)); do
+        # Check if the element starts with "_"
+        if [[ "${H_values[i]}" == _* ]]; then
+            # Remove the element from the array
+            unset 'H_values[i]'
+            unset 'P_values[i]'
+            # Increment the counter
+            ((empty_vals++))
         fi
-
-        iterations=$((iterations + 1))
-
-        if awk -v h="$H_value" -v site_alt="$SITE_ALT" 'BEGIN { exit !(h <= site_alt) }'; then
-            h_below="$H_value"
-        else
-            h_above="$H_value"
-            break
-        fi
-        
     done
-    iterations=$((iterations - 1))
-    stop_index=$((iterations + skips))
+    unset 'H_values[42]'
+    #echo "H_values new length: ${#H_values[@]}"
+    #echo ${H_values[@]}
+    #echo "New H_values array: ${H_values[@]}"
+    #P_values=("${P_values[@]:$empty_vals}")
+    #echo "P_values new length: ${#P_values[@]}"
+    #echo ${P_values[@]}
+    #h_above=""
+    #h_below=""
+    #iterations=0
+    #skips=0
 
-    H_above+=("$h_above")
-    P_above+=("${P_values[$stop_index]}")
-    if [ "$h_below" = "" ]; then
-        H_below+=(0)
-        SLP=$(ncks -s '%f\n' -H -C -v SLP 15_APRIL_2022_interpolated.nc | head -n 1)
-        P_below+=($(echo "scale=2; $SLP / 100" | bc))
-        echo "Warning: No edge heights found below site altitude. Sea-level pressures will be used for interpolation in the vertical dimension. The results will be less reliable."
-    else
-        H_below+=("$h_below")
-        P_below+=("${P_values[$((stop_index - 1))]}")
-    fi
+    #for H_value in "${H_values[@]}"; do
+        # Skip values with "_"
+        #if [ "$H_value" = "_" ]; then
+        #    skips=$((skips + 1))
+        #    continue
+        #fi
+
+        #iterations=$((iterations + 1))
+
+        #if awk -v h="$H_value" -v site_alt="$SITE_ALT" 'BEGIN { exit !(h <= site_alt) }'; then
+        #    h_below="$H_value"
+        #else
+        #    h_above="$H_value"
+        #    break
+        #fi
+        
+    #done
+    #iterations=$((iterations - 1))
+    #stop_index=$((iterations + skips))
+
+    #H_above+=("$h_above")
+    #P_above+=("${P_values[$stop_index]}")
+    #if [ "$h_below" = "" ]; then
+    #    H_below+=(0)
+    #    SLP=$(ncks -s '%f\n' -H -C -v SLP 15_APRIL_2022_interpolated.nc | head -n 1)
+    #    P_below+=($(echo "scale=2; $SLP / 100" | bc))
+    #    echo "Warning: No edge heights found below site altitude. Sea-level pressures will be used for interpolation in the vertical dimension. The results will be less reliable."
+    #else
+    #    H_below+=("$h_below")
+    #    P_below+=("${P_values[$((stop_index - 1))]}")
+    #fi
 
     #echo "h_above: $h_above"
     #echo "h_below: $h_below"
     #echo "interations: $iterations"
     #echo "index: $stop_index"
-done
 
+    P_alt+=( $(extrapolate_to_get_P_alt "${H_values[*]}" "${P_values[*]}" "$SITE_ALT") )
+done
 #echo "H_above: ${H_above[@]}"
 #echo "H_below: ${H_below[@]}"
 #echo "P_above: ${P_above[@]}"
@@ -147,42 +245,47 @@ done
 
 # Interpolate in vertical dimension
 # Function for linear interpolation
-function linear_interpolate() {
-    local x1=$1
-    local y1=$2
-    local x2=$3
-    local y2=$4
-    local x=$5
+#function linear_interpolate() {
+#    local x1=$1
+#    local y1=$2
+#    local x2=$3
+#    local y2=$4
+#    local x=$5
 
-    local slope=$(bc <<< "scale=10; ($y2 - $y1) / ($x2 - $x1)")
-    local intercept=$(bc <<< "scale=10; $y1 - $slope * $x1")
-    local result=$(bc <<< "scale=10; $slope * $x + $intercept")
+#    local slope=$(bc <<< "scale=10; ($y2 - $y1) / ($x2 - $x1)")
+#    local intercept=$(bc <<< "scale=10; $y1 - $slope * $x1")
+#    local result=$(bc <<< "scale=10; $slope * $x + $intercept")
 
-    echo $result
-}
+#    echo $result
+#}
+
+
+
+
+
 
 # Initialize P_alt array
-declare -a P_alt
+#declare -a P_alt
 
 # Loop for each i
-for ((i=0; i<4; i++)); do
-    h_above=${H_above[i]}
-    p_above=${P_above[i]}
-    h_below=${H_below[i]}
-    p_below=${P_below[i]}
+#for ((i=0; i<4; i++)); do
+#    h_above=${H_above[i]}
+#    p_above=${P_above[i]}
+#    h_below=${H_below[i]}
+#    p_below=${P_below[i]}
 
     # Linearly interpolate to get P_alt at SITE_ALT
-    if (( $(echo "$h_above >= $SITE_ALT" | bc -l) && $(echo "$h_below <= $SITE_ALT" | bc -l) )); then
-        P_alt_i=$(linear_interpolate "$h_above" "$p_above" "$h_below" "$p_below" "$SITE_ALT")
-        P_alt+=("$P_alt_i")
+#    if (( $(echo "$h_above >= $SITE_ALT" | bc -l) && $(echo "$h_below <= $SITE_ALT" | bc -l) )); then
+#        P_alt_i=$(linear_interpolate "$h_above" "$p_above" "$h_below" "$p_below" "$SITE_ALT")
+#        P_alt+=("$P_alt_i")
         #echo "For i=$i, P_alt at SITE_ALT ($SITE_ALT) is: $P_alt_i"
-    else
-        P_alt+=("NA")  # Not applicable if SITE_ALT is outside the range
+#    else
+#        P_alt+=("NA")  # Not applicable if SITE_ALT is outside the range
         #echo "For i=$i, SITE_ALT ($SITE_ALT) is outside the range of H_above and H_below values."
-    fi
-done
+#    fi
+#done
 
-#echo "P_alt array: ${P_alt[@]}"
+echo "P_alt: ${P_alt[@]}"
 
 # Interpolate to the site position (ncflint segfaults with -i option, so
 # give explicit weights with -w.) Start by computing the weighting factors.
