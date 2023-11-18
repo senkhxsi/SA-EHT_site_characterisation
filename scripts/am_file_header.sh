@@ -1,4 +1,4 @@
-FILENAME=$(printf "%s_%s_%s.amc" $SITE $SEASON $YEAR)
+FILENAME=$(printf "%s_%s_%s.amc" $SITE $MONTH $YEAR)
 ACCESS_DATE=$(
     ls -lT ${DATADIR}/*MERRA* | head -n 1 | awk '{printf "%s %s %s", $9, $6, $7}'
 )
@@ -11,7 +11,7 @@ printf "#\n"
 printf "#            site: %s (lat %s, lon %s)\n"\
     ${SITE_LABEL} ${SITE_LAT} ${SITE_LONG}
 
-printf "#          season: %s\n" $SEASON $YEAR
+printf "#          Period: %s\n" $MONTH $YEAR
 #printf "#     H2O profile: %sth percentile\n" $1
 #printf "#      O3 profile: median\n"
 printf "#\n"
