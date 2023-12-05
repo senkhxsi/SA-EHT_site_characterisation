@@ -3,7 +3,7 @@
 BEGIN {
     P_col = 1       # column number for pressure [mbar]
     T_col = 2       # column number for temperature [K]
-    x_H2O_vpr_col = 3   # column number for H2O vmr in ppmv
+    x_H2O_vpr_col = 3   # column number for H2O vmr
     x_lqd_H2O_col = 4   # column number for liquid water vmr in ppm
     x_ice_H2O_col = 5   # column number for ice water vmr in ppm
     x_O3_col = 6    # column number for O3 vmr in ppmv
