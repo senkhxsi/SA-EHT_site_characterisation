@@ -12,8 +12,8 @@ export SCRIPTS_DIR=~/projects/ngeht_site_characterisation/scripts
 export VENV=~/venvs/viper_env
 
 # Site coordinates, and bracketing MERRA-2 grid coordinates
-export SITE_LAT=-32.376
-export SITE_LONG=20.811
+export SITE_LAT=-32.378
+export SITE_LONG=20.813
 
 export MERRA_LAT0=-32.5
 export MERRA_LAT1=-32.0
