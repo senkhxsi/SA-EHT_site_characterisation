@@ -1,0 +1,5 @@
+*n_lev = lev.size();
+QI_avg[$lev] = 0.0;
+for (*i = 0; i < n_lev; ++i) {
+    QI_avg(i) = avg(QI(:,i,0,0));
+}

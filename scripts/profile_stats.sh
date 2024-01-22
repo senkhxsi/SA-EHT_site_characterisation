@@ -1,4 +1,4 @@
-# This script computes median profile statistics for a given site by
+# This script computes avgian profile statistics for a given site by
 # first horizontally interpolating a set of MERRA-2 NetCDF files to the
 # site longitude and latitude, then using a set of nco scripts to compute
 # the average profiles for temperature, water vapour, liquid water, ice water and ozone.
@@ -84,11 +84,11 @@ ncap2 -O -s "lon={${SITE_LONG}}" 7.nc 6.nc
 ncflint -O -w ${W3},${W4} 5.nc 6.nc 7.nc
 ncap2 -O -s "lat={${SITE_LAT}}" 7.nc ${SITE}_${MONTH}_${YEAR}.nc
 
-# Get edge height medians for surface pressure estimation
-ncap2 -O -S $SCRIPTS_DIR/H_meds.nco 1.nc 8.nc
-ncap2 -O -S $SCRIPTS_DIR/H_meds.nco 2.nc 9.nc
-ncap2 -O -S $SCRIPTS_DIR/H_meds.nco 3.nc 10.nc
-ncap2 -O -S $SCRIPTS_DIR/H_meds.nco 4.nc 11.nc 
+# Get edge height means for surface pressure estimation
+ncap2 -O -S $SCRIPTS_DIR/H_avgs.nco 1.nc 8.nc
+ncap2 -O -S $SCRIPTS_DIR/H_avgs.nco 2.nc 9.nc
+ncap2 -O -S $SCRIPTS_DIR/H_avgs.nco 3.nc 10.nc
+ncap2 -O -S $SCRIPTS_DIR/H_avgs.nco 4.nc 11.nc 
 
 rm [0-7].nc
 
@@ -103,10 +103,10 @@ declare -a P_below=()
 for file in {8..11}.nc; do
     #echo "Processing $file..."
 
-    # Extract lines containing 'H_med ='
-    #H_values=($(ncdump -v H_med $file | awk '/H_med =/{p=1; next} p && /\}/{p=0} p' | sed -e 's/,//'))
-    # Use ncks to get the values of H_med, then use AWK to process the output and write to a temporary file
-    ncks --trd -H -v H_med "$file" | awk 'BEGIN {FS="="} /H_/ {print ($3 < 100000. ? $3 : 0)}' > temp_file.txt
+    # Extract lines containing 'H_avg ='
+    #H_values=($(ncdump -v H_avg $file | awk '/H_avg =/{p=1; next} p && /\}/{p=0} p' | sed -e 's/,//'))
+    # Use ncks to get the values of H_avg, then use AWK to process the output and write to a temporary file
+    ncks --trd -H -v H_avg "$file" | awk 'BEGIN {FS="="} /H_/ {print ($3 < 100000. ? $3 : 0)}' > temp_file.txt
 
     # Read the values from the temporary file into the array
     declare -a H_values=()
@@ -228,12 +228,12 @@ PS=$(bc <<< "scale=10; $W2 * ($W4 * ${P_alt[0]} + $W3 * ${P_alt[2]}) + $W1 * ($W
 #SLP=$(ncdump -v SLP "${SITE}_${MONTH}_${YEAR}.nc" | awk '/SLP =/ {p=1; next} p && /;/ {p=0} p {gsub(/,/, ""); sum+=$1; count++} END {print sum/count/100}')
 #PS=$(ncdump -v PS "${SITE}_${MONTH}_${YEAR}.nc" | awk '/PS =/ {p=1; next} p && /;/ {p=0} p {gsub(/,/, ""); sum+=$1; count++} END {print sum/count/100}')
 
-# Compute medians
-ncap2 -O -S $SCRIPTS_DIR/T_meds.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
-ncap2 -O -S $SCRIPTS_DIR/RH_meds.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
-ncap2 -O -S $SCRIPTS_DIR/QL_meds.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
-ncap2 -O -S $SCRIPTS_DIR/QI_meds.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
-ncap2 -O -S $SCRIPTS_DIR/O3_meds.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
+# Compute means
+ncap2 -O -S $SCRIPTS_DIR/T_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
+ncap2 -O -S $SCRIPTS_DIR/RH_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
+ncap2 -O -S $SCRIPTS_DIR/QL_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
+ncap2 -O -S $SCRIPTS_DIR/QI_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
+ncap2 -O -S $SCRIPTS_DIR/O3_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
 
 # Extract pressure levels into a single-column file
 
@@ -246,31 +246,31 @@ awk 'BEGIN {FS="="} /lev/ {printf("%8.1f\n", $2)}' > lev.col
 # Extract corresponding profiles vs. pressure into single-column files,
 # converting mass mixing ratios to volume mixing ratios in parts per million.
 
-ncks --trd -H -v T_med ${SITE}_${MONTH}_${YEAR}.nc |
-awk 'BEGIN {FS="="} /T_/ {printf("%8.3f\n", $3 < 1000. ? $3 : 999.999)}' > T_med.col
-ncks --trd -H -v RH_med ${SITE}_${MONTH}_${YEAR}.nc |
-awk 'BEGIN {FS="="} /RH_/ {printf("%8.1f\n", $3)}' > h2o_vpr_med.col
-ncks --trd -H -v QL_med ${SITE}_${MONTH}_${YEAR}.nc |
-awk 'BEGIN {FS="="} /QL_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > lqd_h20_vmr_med.col
-ncks --trd -H -v QI_med ${SITE}_${MONTH}_${YEAR}.nc |
-awk 'BEGIN {FS="="} /QI_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > ice_h2o_vmr_med.col
-ncks --trd -H -v O3_med ${SITE}_${MONTH}_${YEAR}.nc |
-awk 'BEGIN {FS="="} /O3_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 47.997) * $3 : 9.9999e99)}' > o3_vmr_med.col
+ncks --trd -H -v T_avg ${SITE}_${MONTH}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /T_/ {printf("%8.3f\n", $3 < 1000. ? $3 : 999.999)}' > T_avg.col
+ncks --trd -H -v RH_avg ${SITE}_${MONTH}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /RH_/ {printf("%8.1f\n", $3)}' > h2o_vpr_avg.col
+ncks --trd -H -v QL_avg ${SITE}_${MONTH}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /QL_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > lqd_h20_vmr_avg.col
+ncks --trd -H -v QI_avg ${SITE}_${MONTH}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /QI_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > ice_h2o_vmr_avg.col
+ncks --trd -H -v O3_avg ${SITE}_${MONTH}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /O3_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 47.997) * $3 : 9.9999e99)}' > o3_vmr_avg.col
 
 rm -f ${SITE}_${MONTH}_${YEAR}.nc
 
 # Paste all the columns together into a single file under a header line.
-echo "#  P[mb]  T_med[K] H2O_vpr_med[1] lqd_H2O_med[ppm] ice_H2O_med[ppm] O3_med[ppm]" \
-    > ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_medians.txt
+echo "#  P[mb]  T_avg[K] H2O_vpr_avg[1] lqd_H2O_avg[ppm] ice_H2O_avg[ppm] O3_avg[ppm]" \
+    > ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means.txt
 
 
 paste -d "\0" lev.col \
-    T_med.col \
-    h2o_vpr_med.col \
-    lqd_h20_vmr_med.col \
-    ice_h2o_vmr_med.col \
-    o3_vmr_med.col \
-    >> ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_medians.txt
+    T_avg.col \
+    h2o_vpr_avg.col \
+    lqd_h20_vmr_avg.col \
+    ice_h2o_vmr_avg.col \
+    o3_vmr_avg.col \
+    >> ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means.txt
 
 rm *.col
 # Estimate surface-level pressures from atmospheric mean sea level pressures using simplified hypsometric equation
@@ -294,9 +294,9 @@ rm *.col
 echo "PSURF_${MONTH}_${YEAR}=$PS" >> "$PSURF_FILE"
 
 # Remove rows with illogical temperature values
-$SCRIPTS_DIR/./filter_rows.sh ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_medians.txt
+$SCRIPTS_DIR/./filter_rows.sh ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means.txt
 
-awk -f $SCRIPTS_DIR/extrapolate_to_surface.awk Ptrunc=$PTRUNC Ps=$PS ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_medians.txt > ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_medians_ex.txt
+awk -f $SCRIPTS_DIR/extrapolate_to_surface.awk Ptrunc=$PTRUNC Ps=$PS ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means.txt > ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means_ex.txt
 
 done
 done

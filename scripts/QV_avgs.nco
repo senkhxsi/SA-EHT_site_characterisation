@@ -1,0 +1,5 @@
+*n_lev = lev.size();
+QV_avg[$lev] = 0.0;
+for (*i = 0; i < n_lev; ++i) {
+    QV_avg(i) = avg(QV(:,i,0,0));
+}

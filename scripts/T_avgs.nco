@@ -1,0 +1,5 @@
+*n_lev = lev.size();
+T_avg[$lev] = 0.0;
+for (*i = 0; i < n_lev; ++i) {
+    T_avg(i) = avg(T(:,i,0,0));
+}

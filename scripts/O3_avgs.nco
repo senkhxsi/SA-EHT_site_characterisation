@@ -1,0 +1,5 @@
+*n_lev = lev.size();
+O3_avg[$lev] = 0.0;
+for (*i = 0; i < n_lev; ++i) {
+    O3_avg(i) = avg(O3(:,i,0,0));
+}
