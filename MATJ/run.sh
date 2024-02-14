@@ -9,7 +9,7 @@ export DATERANGE=2009-2022
 export SITE_DIR=~/projects/ngeht_site_characterisation/${SITE}
 export DATADIR=${SITE_DIR}/${SITE}_${DATERANGE}_subset
 export SCRIPTS_DIR=~/projects/ngeht_site_characterisation/scripts
-export VENV=~/venvs/viper_env
+export VENV=~/projects/ngeht_site_characterisation/.venv
 
 # Site coordinates, and bracketing MERRA-2 grid coordinates
 export SITE_LAT=-33.266
