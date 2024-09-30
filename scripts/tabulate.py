@@ -48,7 +48,7 @@ def merra2_file_sorting(file_name):
 # Read quantities of interest from each month's directory and use data to populate a csv file for each month 
 for month in months:
     data = [
-        ['Year', 'PWV(mm)', 'tau_86GHz', 'tau_230GHz', 'tau_345GHz']
+        ['Year', 'PWV(mm)', 'tau_86GHz', 'tau_230GHz', 'tau_345GHz', 'T_b(K)_86GHz', 'T_b(K)_230GHz', 'T_b(K)_345GHz']
     ]
     
     
@@ -86,6 +86,7 @@ for month in months:
     
     # Get zenith spectral opacities
     opacities = [[] for _ in range(3)]
+    T_b = [[] for _ in range(3)]
     out_files = glob('*.out')
     out_files.sort()
     for out_file in out_files:
@@ -108,12 +109,14 @@ for month in months:
                 if first_field == freq:
                     # Extract the second field from the line
                     opacities[n].append(float(fields[1]))
+                    # Extract last field
+                    T_b[n].append(float(fields[-1]))
                     break
     
     
     # Join all lists        
     for m, year in enumerate(years):
-        row = [year, pwvs[m], opacities[0][m], opacities[1][m], opacities[2][m]]
+        row = [year, pwvs[m], opacities[0][m], opacities[1][m], opacities[2][m], T_b[0][m], T_b[1][m], T_b[2][m]]
         data.append(row)
         
     # Write data to csv file
