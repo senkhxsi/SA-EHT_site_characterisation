@@ -103,9 +103,7 @@ declare -a P_below=()
 for file in {8..11}.nc; do
     #echo "Processing $file..."
 
-    # Extract lines containing 'H_avg ='
-    #H_values=($(ncdump -v H_avg $file | awk '/H_avg =/{p=1; next} p && /\}/{p=0} p' | sed -e 's/,//'))
-    # Use ncks to get the values of H_avg, then use AWK to process the output and write to a temporary file
+    # Extract lines containing 'H_avg =' and use ncks to get the values of H_avg, then use AWK to process the output and write to a temporary file
     ncks --trd -H -v H_avg "$file" | awk 'BEGIN {FS="="} /H_/ {print ($3 < 100000. ? $3 : 0)}' > temp_file.txt
 
     # Read the values from the temporary file into the array
@@ -117,13 +115,9 @@ for file in {8..11}.nc; do
     # Remove the temporary file
     rm temp_file.txt
 
-    #echo ${H_values[@]}
-
-    # Extract the values of the 'lev' variable using ncdump, and remove extra characters
-    #P_values=$(ncdump -v lev $file | awk '/lev =/{if(++count==2) print;}')
+    
 
     # Cut the first two fields (lev and =) and then convert the comma-separated values to an array
-    #IFS=', ' read -r -a P_values <<< "$(echo $P_values | cut -d' ' -f3-)"
     ncks --trd -H -v lev ${SITE}_${MONTH}_${YEAR}.nc | awk 'BEGIN {FS="="} /lev/ {printf("%8.1f\n", $2)}' > temp_file.txt
 
     # Read the values from the temporary file into the array
@@ -171,15 +165,8 @@ for file in {8..11}.nc; do
         P_below+=("${P_values[$((stop_index - 1))]}")
     fi
 
-    #echo "h_above: $h_above"
-    #echo "h_below: $h_below"
-    #echo "interations: $iterations"
-    #echo "index: $stop_index"
 done
-#echo "H_above: ${H_above[@]}"
-#echo "H_below: ${H_below[@]}"
-#echo "P_above: ${P_above[@]}"
-#echo "P_below: ${P_below[@]}"
+
 
 rm {8,9,10,11}.nc
 
@@ -220,13 +207,8 @@ for ((i=0; i<4; i++)); do
     fi
 done
 
-#echo "P_alt array: ${P_alt[@]}"
-
 PS=$(bc <<< "scale=10; $W2 * ($W4 * ${P_alt[0]} + $W3 * ${P_alt[2]}) + $W1 * ($W4 * ${P_alt[1]} + $W3 * ${P_alt[3]})")
 
-# Calculate the average SLP value and store it in the SLP shell variable
-#SLP=$(ncdump -v SLP "${SITE}_${MONTH}_${YEAR}.nc" | awk '/SLP =/ {p=1; next} p && /;/ {p=0} p {gsub(/,/, ""); sum+=$1; count++} END {print sum/count/100}')
-#PS=$(ncdump -v PS "${SITE}_${MONTH}_${YEAR}.nc" | awk '/PS =/ {p=1; next} p && /;/ {p=0} p {gsub(/,/, ""); sum+=$1; count++} END {print sum/count/100}')
 
 # Compute means
 ncap2 -O -S $SCRIPTS_DIR/T_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
@@ -234,6 +216,8 @@ ncap2 -O -S $SCRIPTS_DIR/RH_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH
 ncap2 -O -S $SCRIPTS_DIR/QL_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
 ncap2 -O -S $SCRIPTS_DIR/QI_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
 ncap2 -O -S $SCRIPTS_DIR/O3_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
+ncap2 -O -S $SCRIPTS_DIR/U_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
+ncap2 -O -S $SCRIPTS_DIR/V_avgs.nco ${SITE}_${MONTH}_${YEAR}.nc ${SITE}_${MONTH}_${YEAR}.nc
 
 # Extract pressure levels into a single-column file
 
@@ -256,11 +240,15 @@ ncks --trd -H -v QI_avg ${SITE}_${MONTH}_${YEAR}.nc |
 awk 'BEGIN {FS="="} /QI_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 18.015) * $3 / (1.0 - $3) : 9.9999e99)}' > ice_h2o_vmr_avg.col
 ncks --trd -H -v O3_avg ${SITE}_${MONTH}_${YEAR}.nc |
 awk 'BEGIN {FS="="} /O3_/ {printf("%12.4e\n", $3 < 1e10 ? 1e6 * (28.964 / 47.997) * $3 : 9.9999e99)}' > o3_vmr_avg.col
+ncks --trd -H -v U_avg ${SITE}_${MONTH}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /U_/ {printf("%8.3f\n", $3 < 1000. ? $3 : 999.999)}' > U_avg.col
+ncks --trd -H -v V_avg ${SITE}_${MONTH}_${YEAR}.nc |
+awk 'BEGIN {FS="="} /V_/ {printf("%8.3f\n", $3 < 1000. ? $3 : 999.999)}' > V_avg.col
 
 rm -f ${SITE}_${MONTH}_${YEAR}.nc
 
 # Paste all the columns together into a single file under a header line.
-echo "#  P[mb]  T_avg[K] H2O_vpr_avg[1] lqd_H2O_avg[ppm] ice_H2O_avg[ppm] O3_avg[ppm]" \
+echo "#  P[mb]  T_avg[K] H2O_vpr_avg[1] lqd_H2O_avg[ppm] ice_H2O_avg[ppm] O3_avg[ppm] U_avg[m/s] V_avg[m/s]" \
     > ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means.txt
 
 
@@ -270,27 +258,12 @@ paste -d "\0" lev.col \
     lqd_h20_vmr_avg.col \
     ice_h2o_vmr_avg.col \
     o3_vmr_avg.col \
+    U_avg.col \
+    V_avg.col \
     >> ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means.txt
 
 rm *.col
-# Estimate surface-level pressures from atmospheric mean sea level pressures using simplified hypsometric equation
 
-# Constants
-#g=9.81      # acceleration due to gravity (m/s^2)
-#M=0.0289644 # molar mass of air (kg/mol)
-#R=8.31447   # Specific gas constant for air (in J/(mol·K))
-#L=-0.0065   # Temperature lapse rate (K/m)
-
-#T0=288.15   # Standard temperature at mean sea level (K)
-
-# Estimate temperature at site 
-#T1=$(echo "scale=3; $T0 + $L * $SITE_ALT" | bc -l)
-#T=$(echo "scale=3; ($T0 + $T1) / 2" | bc -l)  # Average temperature
-
-# Estimate surface pressure using hypsometric equation
-#PS=$(echo "$SLP * e(-$g * $SITE_ALT * $M / ($R * $T))" | bc -l)
-
-#echo "PSURF_${MONTH}_${YEAR}=$PS2" >> "$PSURF_FILE"
 echo "PSURF_${MONTH}_${YEAR}=$PS" >> "$PSURF_FILE"
 
 # Remove rows with illogical temperature values
