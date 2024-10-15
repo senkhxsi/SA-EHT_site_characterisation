@@ -57,6 +57,8 @@ $SCRIPTS_DIR/./run_am_models.sh
 rm -r $OUTDIR_AM/am_cache
 echo cleaning up ...
 python3 $SCRIPTS_DIR/cleanup.py ${SITE_DIR}
+
+# Tabulate the results
 source $VENV/bin/activate
 python3 $SCRIPTS_DIR/tabulate.py ${SITE_DIR} ${DATADIR}
 deactivate

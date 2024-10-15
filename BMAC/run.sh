@@ -2,9 +2,9 @@
 # spectra.
 
 # Site name, date range, and path to directory containing the  data files.
-export SITE=MATJ
-export SITE_LABEL='MATJ'
-export SITE_ALT=1340
+export SITE=BMAC
+export SITE_LABEL='BMAC'
+export SITE_ALT=3000
 export DATERANGE=2009-2022
 export SITE_DIR=~/projects/ngeht_site_characterisation/${SITE}
 export DATADIR=${SITE_DIR}/${SITE}_${DATERANGE}_subset
@@ -12,13 +12,13 @@ export SCRIPTS_DIR=~/projects/ngeht_site_characterisation/scripts
 export VENV=~/projects/ngeht_site_characterisation/.venv
 
 # Site coordinates, and bracketing MERRA-2 grid coordinates
-export SITE_LAT=-33.266
-export SITE_LONG=20.582
+export SITE_LAT=-30.648081
+export SITE_LONG=27.935199
 
-export MERRA_LAT0=-33.5
-export MERRA_LAT1=-33.0
-export MERRA_LONG0=20.0
-export MERRA_LONG1=20.625
+export MERRA_LAT0=-31
+export MERRA_LAT1=-30.5
+export MERRA_LONG0=27.5
+export MERRA_LONG1=28.125
 
 # The surface pressure at the MERRA-2 grid points may not match the nominal
 # site surface pressure.  The following constants control truncation
@@ -31,7 +31,7 @@ export PTRUNC=900. # truncation point [mbar] of MERRA-2 profiles
 
 # Frequency range [GHz] for am models
 export F_MIN=80.
-export F_MAX=700.
+export F_MAX=400.
 # Frequency interval [MHz]
 export DF=500.
 
@@ -62,5 +62,3 @@ python3 $SCRIPTS_DIR/cleanup.py ${SITE_DIR}
 source $VENV/bin/activate
 python3 $SCRIPTS_DIR/tabulate.py ${SITE_DIR} ${DATADIR}
 deactivate
-
-echo done.

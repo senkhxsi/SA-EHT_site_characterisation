@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 from glob import glob
 
 os.chdir(f"{sys.argv[1]}")
@@ -18,7 +19,7 @@ for i in range(1, 13):
     seasons2.append(tmp)
     if os.path.exists(f"{seasons2[i-1]}"):
         # remove data from the previous run if it exists
-        os.rmdir(f"{seasons2[i-1]}")
+        shutil.rmtree(f"{seasons2[i-1]}")
     
     os.makedirs(f"{seasons2[i-1]}/am_models", exist_ok=True)
     os.mkdir(f"{seasons2[i-1]}/profile_stats")
