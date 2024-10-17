@@ -247,8 +247,11 @@ awk 'BEGIN {FS="="} /V_/ {printf("%8.3f\n", $3 < 1000. ? $3 : 999.999)}' > V_avg
 
 rm -f ${SITE}_${MONTH}_${YEAR}.nc
 
+# Compute wind speed vector magnitudes
+paste U_avg.col V_avg.col | awk '{U = $1; V = $2; v_wind = sqrt(U*U + V*V); printf("%8.3f\n", v_wind)}' > v_wind_avg.col
+
 # Paste all the columns together into a single file under a header line.
-echo "#  P[mb]  T_avg[K] H2O_vpr_avg[1] lqd_H2O_avg[ppm] ice_H2O_avg[ppm] O3_avg[ppm] U_avg[m/s] V_avg[m/s]" \
+echo "#  P[mb]  T_avg[K] H2O_vpr_avg[1] lqd_H2O_avg[ppm] ice_H2O_avg[ppm] O3_avg[ppm] v_wind_avg[m/s]" \
     > ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means.txt
 
 
@@ -258,8 +261,7 @@ paste -d "\0" lev.col \
     lqd_h20_vmr_avg.col \
     ice_h2o_vmr_avg.col \
     o3_vmr_avg.col \
-    U_avg.col \
-    V_avg.col \
+    v_wind_avg.col \
     >> ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means.txt
 
 rm *.col

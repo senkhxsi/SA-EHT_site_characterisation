@@ -34,8 +34,8 @@ END {
         du = tab[1,j] - tab[2,j]
         tab[0,j] = tab[1,j] + (log_Ps - log_P1) * du / dlog_P
     }
-    # Set negative values in the extrapolated row to zero, excluding last two columns
-    for (j = 2; j <= NF; ++j) {
+    # Set negative values in the extrapolated row to zero, except the first column
+    for (j = 2; j <= NF - 1; ++j) {
         if (tab[0,j] < 0) {
             tab[0,j] = 0
         }

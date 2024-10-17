@@ -110,18 +110,20 @@ for month in months:
     wind_speeds = []
     
     for stat_file in stat_files:
-        # Open the file and read the first line
+        # Open the file
         with open(stat_file, 'r') as file:
-            first_line = file.readline().strip()  # Read the first line and remove extra whitespace
+            file.readline()  # Read and discard the header line
 
-        # Split the line into a list of values
-        values = first_line.split()
+            # Now read the first line of actual data
+            first_line = file.readline().strip()  # Read the first data line and remove extra whitespace
 
-        # Extract the last two columns
-        U = float(values[-2])
-        V = float(values[-1])
+            # Split the line into a list of values
+            wind_speed = first_line.split()[-1]
+            
         
-        wind_speeds.append(magnitude(U, V))
+        # Append wind speed to list
+        wind_speeds.append(float(wind_speed))
+    
     
     # Join all lists        
     for m, year in enumerate(years):

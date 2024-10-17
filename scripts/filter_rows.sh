@@ -14,6 +14,13 @@ filtered_file="filtered_data.txt"
 
 # Read the input file line by line
 while IFS= read -r line; do
+    # Check if the line starts with a hash (header line)
+    if [[ "$line" =~ ^# ]]; then
+        # This is the header line, append it to the filtered file
+        echo "$line" >> "$filtered_file"
+        continue
+    fi
+
     # Check if T_med value is greater than 999
     t_med=$(echo "$line" | awk '{print $2}')
     if (( $(awk -v t_med="$t_med" 'BEGIN { print (t_med > 999) }') )); then
@@ -27,5 +34,3 @@ done < "$input_file"
 
 # Replace the original file with the filtered file
 mv "$filtered_file" "$input_file"
-
-#echo "Rows with T_med greater than 999 have been removed."
