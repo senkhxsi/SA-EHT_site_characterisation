@@ -60,5 +60,7 @@ python3 $SCRIPTS_DIR/cleanup.py ${SITE_DIR}
 
 # Tabulate the results
 source $VENV/bin/activate
-python3 $SCRIPTS_DIR/tabulate.py ${SITE_DIR} ${DATADIR}
+python3 $SCRIPTS_DIR/tabulate.py ${SITE_DIR}
 deactivate
+
+echo done.
