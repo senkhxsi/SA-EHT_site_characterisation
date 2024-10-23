@@ -15,6 +15,20 @@ fi
 
 PSURF_FILE=${SITE_DIR}/psurf_values.txt
 
+# Function for linear interpolation
+function linear_interpolate() {
+    local x1=$1
+    local y1=$2
+    local x2=$3
+    local y2=$4
+    local x=$5
+
+    local slope=$(bc <<< "scale=10; ($y2 - $y1) / ($x2 - $x1)")
+    local intercept=$(bc <<< "scale=10; $y1 - $slope * $x1")
+    local result=$(bc <<< "scale=10; $slope * $x + $intercept")
+
+    echo $result
+}
 
 for YEAR in {2009..2022}; do
 for MONTH in Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec; do
@@ -115,7 +129,6 @@ for file in {8..11}.nc; do
     # Remove the temporary file
     rm temp_file.txt
 
-    
 
     # Cut the first two fields (lev and =) and then convert the comma-separated values to an array
     ncks --trd -H -v lev ${SITE}_${MONTH}_${YEAR}.nc | awk 'BEGIN {FS="="} /lev/ {printf("%8.1f\n", $2)}' > temp_file.txt
@@ -171,21 +184,6 @@ done
 rm {8,9,10,11}.nc
 
 # Interpolate in vertical dimension
-# Function for linear interpolation
-function linear_interpolate() {
-    local x1=$1
-    local y1=$2
-    local x2=$3
-    local y2=$4
-    local x=$5
-
-    local slope=$(bc <<< "scale=10; ($y2 - $y1) / ($x2 - $x1)")
-    local intercept=$(bc <<< "scale=10; $y1 - $slope * $x1")
-    local result=$(bc <<< "scale=10; $slope * $x + $intercept")
-
-    echo $result
-}
-
 # Initialize P_alt array
 declare -a P_alt=()
 
@@ -268,7 +266,7 @@ rm *.col
 
 echo "PSURF_${MONTH}_${YEAR}=$PS" >> "$PSURF_FILE"
 
-# Remove rows with illogical temperature values
+# Remove rows with unphysical temperature values
 $SCRIPTS_DIR/./filter_rows.sh ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means.txt
 
 awk -f $SCRIPTS_DIR/extrapolate_to_surface.awk Ptrunc=$PTRUNC Ps=$PS ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means.txt > ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means_ex.txt

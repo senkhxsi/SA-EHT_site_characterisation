@@ -16,6 +16,8 @@ import pandas as pd
 # cd to directory containing MERRA-am simulations outputs as organised by 'cleanup.py' 
 os.chdir(f'{sys.argv[1]}')
 
+site_label = sys.argv[2]
+
 
 # Make directory for weather data if it does not already exist
 if not os.path.exists(f'{sys.argv[1]}/weather_data'):
@@ -31,9 +33,6 @@ years = [str(year) for year in range(2009, 2023)]
 freqs = [86, 230, 345]
 
 months = ['01Jan', '02Feb', '03Mar', '04Apr', '05May', '06Jun', '07Jul', '08Aug', '09Sep', '10Oct', '11Nov', '12Dec']
-
-def magnitude(u, v):
-    return np.sqrt(u**2 + v**2)
 
 
 # Read quantities of interest from each month's directory and use data to populate a csv file for each month 
@@ -106,28 +105,52 @@ for month in months:
     
     # Get wind speeds
     os.chdir(f'../profile_stats')
-    stat_files = sorted(glob('*_ex.txt'))
-    wind_speeds = []
+    interp_wind_speeds = []
     
-    for stat_file in stat_files:
-        # Open the file
-        with open(stat_file, 'r') as file:
+    for year in years:
+        # get surface pressure
+        with open(f'{site_label}_{month[2:]}_{year}_MERRA_means_ex.txt', 'r') as file:
             file.readline()  # Read and discard the header line
 
             # Now read the first line of actual data
             first_line = file.readline().strip()  # Read the first data line and remove extra whitespace
 
-            # Split the line into a list of values
-            wind_speed = first_line.split()[-1]
+            # get pressure as first value in first row of data
+            Ps = float(first_line.split()[0])
             
+        # create lists to store pressure and windspeed columns
+        pressures = []
+        wind_speeds = []
+        
+        # get pressures and wind speeds
+        with open(f'{site_label}_{month[2:]}_{year}_MERRA_means.txt', 'r') as file:
+            # Iterate over each line in the file
+            for line in file:
+                # Skip comment lines or empty lines
+                if line.startswith('#') or not line.strip():
+                    continue
+                
+                # Split the line into columns
+                columns = line.split()
+                
+                # Append the first and last columns to the respective lists
+                pressures.append(float(columns[0]))  # First column (pressure)
+                wind_speeds.append(float(columns[-1]))   # Last column (wind speed)
+        
+        # reverse order in order to use np.interp()
+        pressures.reverse()
+        wind_speeds.reverse()
+        
+        # calculate wind speed using linear interpolation
+        interp_wind_speed = np.interp(Ps, pressures, wind_speeds)
         
         # Append wind speed to list
-        wind_speeds.append(float(wind_speed))
+        interp_wind_speeds.append(interp_wind_speed)
     
     
     # Join all lists        
     for m, year in enumerate(years):
-        row = [year, pwvs[m], opacities[0][m], opacities[1][m], opacities[2][m], T_b[0][m], T_b[1][m], T_b[2][m], wind_speeds[m]]
+        row = [year, pwvs[m], opacities[0][m], opacities[1][m], opacities[2][m], T_b[0][m], T_b[1][m], T_b[2][m], interp_wind_speeds[m]]
         data.append(row)
         
     # Write data to csv file
