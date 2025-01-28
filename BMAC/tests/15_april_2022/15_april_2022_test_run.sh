@@ -43,7 +43,7 @@ export F_MAX=700.
 export DF=500.
 
 # Compute profile statistics.
-export OUTDIR_PROFILES=../profile_stats
+export OUTDIR_PROFILES=./profile_stats
 if [ ! -d $OUTDIR_PROFILES ]; then
     mkdir $OUTDIR_PROFILES
 fi
@@ -51,7 +51,7 @@ echo computing seasonal statistics ...
 ./profile_stats_inst.sh
 
 # Generate am model files and compute spectra.
-export OUTDIR_AM=../am_models
+export OUTDIR_AM=./am_models
 if [ ! -d $OUTDIR_AM ]; then
     mkdir $OUTDIR_AM
 fi

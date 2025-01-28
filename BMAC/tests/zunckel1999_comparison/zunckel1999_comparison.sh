@@ -16,8 +16,8 @@ MERRA_LONG1=28.125
 
 # List of directories
 directories=(
-    "../march_data"
-    "../june_data"
+    "./march_data"
+    "./june_data"
 )
 
 # Loop through each directory
