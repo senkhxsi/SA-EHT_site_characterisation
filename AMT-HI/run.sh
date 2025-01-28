@@ -3,12 +3,13 @@
 
 # Site name, date range, and path to directory containing the  data files.
 export SITE=AMT-HI
+export SITE_LABEL='AMT-HI'
 export SITE_ALT=2350
 export DATERANGE=2009-2022
-export SITE_DIR=~/project/ngeht_site_characterisation/${SITE}
+export SITE_DIR=~/projects/ngeht_site_characterisation/${SITE}
 export DATADIR=${SITE_DIR}/${SITE}_${DATERANGE}_subset
-export SCRIPTS_DIR=~/project/ngeht_site_characterisation/scripts
-export VENV=~/venvs/viper_env
+export SCRIPTS_DIR=~/projects/ngeht_site_characterisation/scripts
+export VENV=~/projects/ngeht_site_characterisation/.venv
 
 # Site coordinates, and bracketing MERRA-2 grid coordinates
 export SITE_LAT=-23.35
@@ -56,8 +57,10 @@ $SCRIPTS_DIR/./run_am_models.sh
 rm -r $OUTDIR_AM/am_cache
 echo cleaning up ...
 python3 $SCRIPTS_DIR/cleanup.py ${SITE_DIR}
+
+# Tabulate the results
 source $VENV/bin/activate
-python3 $SCRIPTS_DIR/tabulate.py ${SITE_DIR} ${DATADIR}
+python3 $SCRIPTS_DIR/tabulate.py ${SITE_DIR} ${SITE_LABEL}
 deactivate
 
 echo done.
