@@ -1,0 +1,3 @@
+[submodule "SA-EHT_data_analysis"]
+	path = SA-EHT_data_analysis
+	url = git@github.com:senkhxsi/SA-EHT_data_analysis.git
