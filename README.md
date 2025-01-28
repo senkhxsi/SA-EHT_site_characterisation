@@ -1,8 +1,8 @@
 # SA-EHT Site Characterisation
 
-Code for estimating millimetre site quality indicators. This code uses [MERRA-2 data](https://disc.gsfc.nasa.gov/datasets/M2I3NPASM_5.12.4/summary)
-and the [_am_ atmospheric model](https://zenodo.org/records/13748403) software to estimate these indicators. The procedure followed is described
-in [this letter](https://arxiv.org/abs/2409.08003). 
+Code for estimating millimetre site quality indicators such as precipitable water vapour, zenith optical depth, zenith brightness temperature and wind speed. 
+This code uses [MERRA-2 data](https://disc.gsfc.nasa.gov/datasets/M2I3NPASM_5.12.4/summary) and the [_am_ atmospheric model](https://zenodo.org/records/13748403)
+software to estimate these indicators. The procedure followed is described in [this letter](https://arxiv.org/abs/2409.08003). 
 
 Many of the scripts are modified versions of scripts from Scott Paine's "ex4_MaunaKea_radio_climatology" folder, which used to be available along
 with `am` user manual, but I can no longer find it.
