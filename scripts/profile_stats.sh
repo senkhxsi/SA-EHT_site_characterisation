@@ -10,7 +10,7 @@ if [ -f "${SITE_DIR}/psurf_values.txt" ]; then
     rm ${SITE_DIR}/psurf_values.txt
     echo "File deleted."
 else
-    echo "File does not exist."
+    echo "File "psurf_values.txt" does not exist. It will be created."
 fi
 
 PSURF_FILE=${SITE_DIR}/psurf_values.txt
@@ -30,51 +30,27 @@ function linear_interpolate() {
     echo $result
 }
 
-for YEAR in {2009..2022}; do
-for MONTH in Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec; do
-
-echo $SITE $MONTH $YEAR
-
-# Find data files by season, and concatenate
-case $MONTH in
-Jan)
-    find $DATADIR  \( -name *Np.${YEAR}01* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-Feb)
-    find $DATADIR  \( -name *Np.${YEAR}02* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-Mar)
-    find $DATADIR  \( -name *Np.${YEAR}03* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-Apr)
-    find $DATADIR  \( -name *Np.${YEAR}04* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-May)
-    find $DATADIR  \( -name *Np.${YEAR}05* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-Jun)
-    find $DATADIR  \( -name *Np.${YEAR}06* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-Jul)
-    find $DATADIR  \( -name *Np.${YEAR}07* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-Aug)
-    find $DATADIR  \( -name *Np.${YEAR}08* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-Sep)
-    find $DATADIR  \( -name *Np.${YEAR}09* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-Oct)
-    find $DATADIR  \( -name *Np.${YEAR}10* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-Nov)
-    find $DATADIR  \( -name *Np.${YEAR}11* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-Dec)
-    find $DATADIR  \( -name *Np.${YEAR}12* \) -print  | sort -t '.' -k 3 | ncrcat -3 -h -O -o 0.nc
-    ;;
-esac
-
+# Find all files ending in "SUB.nc" in DATADIR, sort them, and loop over each
+find "$DATADIR" -name "*SUB.nc" -type f | sort | while read -r file; do
+    
+    # Extract just the filename from the full path
+    filename=$(basename "$file")
+    
+    # Extract the date from the filename
+    # Remove the ".SUB.nc" suffix
+    temp=${filename%.SUB.nc}
+    # Extract just the date part (last 8 characters)
+    date_str=${temp: -8}      # Gets e.g. "20250514"
+    
+    # Extract year, month, day from YYYYMMDD format
+    export YEAR=${date_str:0:4}    # First 4 characters: 2025
+    export MONTH=${date_str:4:2}   # Next 2 characters: 05
+    export DAY=${date_str:6:2}     # Last 2 characters: 14
+    
+    echo "Processing ${DAY}-${MONTH}-${YEAR}..."
+    
+    # Process each file individually with ncrcat
+    ncrcat -3 -h -O -o 0.nc "$file"
 
 # split into one file for each neighboring MERRA grid point
 ncks -O -d lon,0 -d lat,0 0.nc 1.nc
@@ -271,5 +247,4 @@ $SCRIPTS_DIR/./filter_rows.sh ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_
 
 awk -f $SCRIPTS_DIR/extrapolate_to_surface.awk Ptrunc=$PTRUNC Ps=$PS ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means.txt > ${OUTDIR_PROFILES}/${SITE}_${MONTH}_${YEAR}_MERRA_means_ex.txt
 
-done
 done
