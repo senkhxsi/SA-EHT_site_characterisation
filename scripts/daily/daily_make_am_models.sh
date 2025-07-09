@@ -1,5 +1,7 @@
 # Make am models for the site
 
+export LC_NUMERIC=C
+
 # Load the environment variables from psurf_values.txt
 source ${SITE_DIR}/daily_psurf_values.txt
 

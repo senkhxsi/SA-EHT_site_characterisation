@@ -5,6 +5,8 @@ fi
 export AM_CACHE_PATH=${OUTDIR_AM}/am_cache
 export AM_CACHE_HASH_MODULUS=7001
 
+export LC_NUMERIC=C
+
 # Find all files ending in "SUB.nc" in DATADIR, sort them, and store in array
 files=($(find "$DATADIR" -name "*SUB.nc" -type f | sort))
 
