@@ -23,6 +23,7 @@ debugpy==1.8.0
 decorator==5.1.1
 defusedxml==0.7.1
 ehtim==1.2.7
+exceptiongroup==1.3.1
 executing==2.0.1
 fastjsonschema==2.19.0
 folium==0.15.0
@@ -68,15 +69,15 @@ nbformat==5.9.2
 nest-asyncio==1.5.8
 netCDF4==1.6.5
 networkx==3.2.1
-ngEHTforecast @ git+https://github.com/aeb/ngEHTforecast.git@115bf73e77f23336516ce385521aeb2bae2f9a98
-ngehtsim @ file:///Users/senkhosisimelane/git_stuff/ngehtsim
+ngEHTforecast @ git+https://github.com/dpesce/ngEHTforecast.git@7ab10c8921c53d81c5ab70811b1c3029c623dc28
+ngehtsim @ git+https://github.com/senkhxsi/ngehtsim.git@454922849728c3e93466cd717e50d89c9882b213
 notebook==7.0.6
 notebook_shim==0.2.3
 numpy==1.26.2
 overrides==7.4.0
 packaging==23.2
 pandas==1.5.3
-pandas-appender==0.9.8.4
+pandas_appender==0.9.8.4
 pandocfilters==1.5.0
 paramsurvey==0.4.19
 parso==0.8.3
@@ -117,9 +118,11 @@ stack-data==0.6.3
 terminado==0.18.0
 tifffile==2023.12.9
 tinycss2==1.2.1
+tomli==2.4.0
 tornado==6.3.3
 traitlets==5.13.0
 types-python-dateutil==2.8.19.14
+typing_extensions==4.15.0
 tzdata==2023.3
 uri-template==1.3.0
 urllib3==2.1.0
